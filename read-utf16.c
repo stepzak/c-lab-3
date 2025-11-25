@@ -6,7 +6,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <wchar.h>
-
+#define UNICODE_BMP_MAX 0xFFFF
+#define UNICODE_SURROGATE_OFFSET 0x10000
+#define UNICODE_HIGH_SURROGATE_START 0xD800
+#define UNICODE_HIGH_SURROGATE_END 0xDBFF
+#define UNICODE_LOW_SURROGATE_START 0xDC00
+#define UNICODE_LOW_SURROGATE_END 0xDFFF
+#define SURROGATE_MASK 0x3FF
+#define ERROR_CODE 0xFFFFFFFF
 
 utf16_encoding_t detect_encoding() {
     int b1 = getchar(), b2 = getchar();
@@ -21,10 +28,10 @@ utf16_encoding_t detect_encoding() {
 
 uint32_t getutf16(utf16_encoding_t enc) {
     int byte1 = getchar();
-    if (byte1 == EOF) return 0xFFFFFFFF;
+    if (byte1 == EOF) return ERROR_CODE;
 
     int byte2 = getchar();
-    if (byte2 == EOF) return 0xFFFFFFFF;
+    if (byte2 == EOF) return ERROR_CODE;
 
     uint16_t first_unit;
 
@@ -34,13 +41,12 @@ uint32_t getutf16(utf16_encoding_t enc) {
         first_unit = (byte1 << 8) | byte2;
     }
 
-    if (first_unit >= 0xD800 && first_unit <= 0xDBFF) {
-
+    if (first_unit >= UNICODE_HIGH_SURROGATE_START && first_unit <= UNICODE_HIGH_SURROGATE_END) {
         int byte3 = getchar();
-        if (byte3 == EOF) return 0xFFFFFFFF;
+        if (byte3 == EOF) return ERROR_CODE;
 
         int byte4 = getchar();
-        if (byte4 == EOF) return 0xFFFFFFFF;
+        if (byte4 == EOF) return ERROR_CODE;
 
         uint16_t second_unit;
         if (enc == UTF16_LE) {
@@ -49,56 +55,42 @@ uint32_t getutf16(utf16_encoding_t enc) {
             second_unit = (byte3 << 8) | byte4;
         }
 
-        if (second_unit >= 0xDC00 && second_unit <= 0xDFFF) {
-
-            return 0x10000 + ((first_unit - 0xD800) << 10) + (second_unit - 0xDC00);
+        if (second_unit >= UNICODE_LOW_SURROGATE_START && second_unit <= UNICODE_LOW_SURROGATE_END) {
+            return UNICODE_SURROGATE_OFFSET + ((first_unit - UNICODE_HIGH_SURROGATE_START) << 10) + (second_unit - UNICODE_LOW_SURROGATE_START);
         }
-            return first_unit;
-        }
+        return first_unit;
+    }
 
     return first_unit;
 }
 
-
 int is_high_surrogate(uint16_t code_unit) {
-    return (code_unit >= 0xD800 && code_unit <= 0xDBFF);
+    return (code_unit >= UNICODE_HIGH_SURROGATE_START && code_unit <= UNICODE_HIGH_SURROGATE_END);
 }
 
-
 int is_low_surrogate(uint16_t code_unit) {
-    return (code_unit >= 0xDC00 && code_unit <= 0xDFFF);
+    return (code_unit >= UNICODE_LOW_SURROGATE_START && code_unit <= UNICODE_LOW_SURROGATE_END);
 }
 
 uint32_t combine_surrogates(uint16_t high, uint16_t low) {
-    return 0x10000 + ((high - 0xD800) << 10) + (low - 0xDC00);
+    return UNICODE_SURROGATE_OFFSET + ((high - UNICODE_HIGH_SURROGATE_START) << 10) + (low - UNICODE_LOW_SURROGATE_START);
 }
 
-
 void split_surrogates(uint32_t code_point, uint16_t *high, uint16_t *low) {
-    code_point -= 0x10000;
-    *high = (code_point >> 10) + 0xD800;
-    *low = (code_point & 0x3FF) + 0xDC00;
+    code_point -= UNICODE_SURROGATE_OFFSET;
+    *high = (code_point >> 10) + UNICODE_HIGH_SURROGATE_START;
+    *low = (code_point & SURROGATE_MASK) + UNICODE_LOW_SURROGATE_START;
 }
 
 void print_utf16_char(uint32_t code_point, utf16_encoding_t enc) {
-    if (code_point == 0xFFFFFFFF) return;
+    if (code_point == ERROR_CODE) return;
 
-    if (code_point <= 0xFFFF) {
-        if (enc == UTF16_LE) {
-            putwchar(code_point);
-        } else {
-            putwchar(code_point);
-        }
+    if (code_point <= UNICODE_BMP_MAX) {
+        putwchar(code_point);
     } else {
         uint16_t high, low;
         split_surrogates(code_point, &high, &low);
-        if (enc == UTF16_LE) {
-            putwchar(high);
-            putwchar(low);
-        } else {
-            putwchar(high);
-            putwchar(low);
-        }
-
+        putwchar(high);
+        putwchar(low);
     }
 }
