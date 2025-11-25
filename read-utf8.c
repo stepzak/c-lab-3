@@ -2,9 +2,9 @@
 // Created by zakatinstepan on 19.11.2025.
 //
 
-#include "read.h"
+#include "read-utf8.h"
 #include <stdio.h>
-#include <stdint.h>
+#
 
 int getutf8() {
   int c, l;
@@ -13,7 +13,6 @@ int getutf8() {
   if (first_byte == EOF) return EOF;
   if (first_byte <= 127) return first_byte;
 
-  // Инициализируем c первым байтом
   c = first_byte;
 
   if (first_byte >= 0b11110000) {

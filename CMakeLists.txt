@@ -5,5 +5,7 @@ set(CMAKE_C_STANDARD 23)
 
 add_executable(c_lab_4 main.c
         check_space.c
-        read.c
-        caesar.c)
+        read-utf8.c
+        caesar-utf8.c
+        read-utf16.c
+        caesar-utf16.c)

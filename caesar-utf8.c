@@ -2,7 +2,7 @@
 // Created by zakatinstepan on 24.11.2025.
 //
 
-#include "caesar.h"
+#include "caesar-utf8.h"
 #define YO_BIG 0xD081
 #define YO_SMALL 0xD191
 #define E_BIG 0xD095

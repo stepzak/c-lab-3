@@ -10,5 +10,3 @@
 int getutf8();
 void print_utf8_char(int utf8_char);
 
-int getutf16();
-void print_utf16(int utf16_char);
