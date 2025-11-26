@@ -3,9 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <wchar.h>
-
-#include "caesar-utf16.h"
-#include "caesar-utf8.h"
+#include "caesar.h"
 #include "check_space.h"
 #include "read-utf16.h"
 #include "read-utf8.h"
@@ -15,14 +13,14 @@ void utf8() {
     int c = getutf8();
     do {
 
-        if (is_utf8_space(c)) {
+        if (is_space(c)) {
             state = 0;
             print_utf8_char(c);
             c = getutf8();
             continue;
         }
         state++;
-        int shifted = caesar_cyrillic_utf8(c, state+3);
+        int shifted = caesar(c, state+3);
         print_utf8_char(shifted);
         c = getutf8();
 
@@ -31,18 +29,17 @@ void utf8() {
 
 void utf16() {
     int state = 0;
-    setlocale(LC_ALL, "en_US.UTF-8");
     utf16_encoding_t enc = detect_encoding();
     int c = getutf16(enc);
     do {
-        if (is_utf16_space(c)) {
+        if (is_space(c)) {
             state = 0;
             putwchar(c);
             c = getutf16(enc);
             continue;
         }
         state++;
-        int shifted = caesar_utf16(c, state+3);
+        int shifted = caesar(c, state+3);
         print_utf16_char(shifted, enc);
         c = getutf16(enc);
     } while (c != EOF);
@@ -58,6 +55,7 @@ void print_help(const char *program_name) {
 }
 
 int main(int argc, char *argv[]) {
+    setlocale(LC_ALL, "en_US.UTF-8");
     int mode_utf8 = 1;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--utf8") == 0) {

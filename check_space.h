@@ -7,5 +7,4 @@
 
 #endif //CHECK_SPACE_H
 
-int is_utf8_space(int c);
-int is_utf16_space(int c);
+int is_space(int c);
