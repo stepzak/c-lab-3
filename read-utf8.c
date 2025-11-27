@@ -36,24 +36,6 @@ int getutf8() {
 
 void print_utf8_char(int utf8_char) {
   putwchar(utf8_char);
-  return;
-  if (utf8_char <= 127) {
-    putchar(utf8_char);
-  } else {
-    int bytes[4];
-    int len = 0;
 
-    if (utf8_char > 0xFFFFFF) len = 4;
-    else if (utf8_char > 0xFFFF) len = 3;
-    else if (utf8_char > 0xFF) len = 2;
-    else len = 1;
 
-    for (int i = 0; i < len; i++) {
-      bytes[i] = (utf8_char >> (8 * (len - 1 - i))) & 0xFF;
-    }
-
-    for (int i = 0; i < len; i++) {
-      putchar(bytes[i]);
-    }
-  }
 }
